@@ -6,11 +6,27 @@ build-backend = "hatchling.build"
 name = "mfpandas-racfhound"
 version = "0.1.0"
 description = "BloodHound OpenGraph exporter for mfpandas RACF data"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Jonathan Prince", email = "jonathan.prince@gmail.com" }
+]
 requires-python = ">=3.10"
 dependencies = [
-    "mfpandas",
+    "mfpandas>=0.1.6",
     "pandas",
 ]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Security",
+    "Topic :: System :: Systems Administration",
+]
+
+[project.urls]
+Homepage = "https://github.com/JonathanPrince/mfpandas-racfhound"
+Issues = "https://github.com/JonathanPrince/mfpandas-racfhound/issues"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
