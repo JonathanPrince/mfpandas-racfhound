@@ -1,0 +1,16 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mfpandas-racfhound"
+version = "0.1.0"
+description = "BloodHound OpenGraph exporter for mfpandas RACF data"
+requires-python = ">=3.10"
+dependencies = [
+    "mfpandas",
+    "pandas",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
