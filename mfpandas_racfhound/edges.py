@@ -125,7 +125,9 @@ def _dataset_acl(g: Graph, racf, apf_control, parmlib_control, proclib_control):
                    props={"Authorization": auth_lvl})
         for control_map in (apf_control, parmlib_control, proclib_control):
             for concrete_ds, controller in control_map.items():
-                if controller == profile:
+                # Propagate only from the single controlling profile, and never from
+                # the dataset's own profile (its direct ACL edge is added above).
+                if controller == profile and profile != concrete_ds:
                     g.add_edge(relation, principal_type, authid, "RACFDataset", concrete_ds,
                                props={"via_generic_profile": profile, "Authorization": auth_lvl})
                     g.add_generic_covers(profile, concrete_ds)
@@ -289,7 +291,7 @@ def _orphans(g: Graph, racf):
         (ds_orphans, "DSACC_AUTH_ID"),
         (gr_orphans, "GRACC_AUTH_ID"),
     ):
-        if orphan_df.empty or auth_col not in orphan_df.columns:
+        if orphan_df is None or orphan_df.empty or auth_col not in orphan_df.columns:
             continue
         for auth_id in orphan_df[auth_col].str.strip().dropna().unique():
             auth_id = str(auth_id)

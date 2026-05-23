@@ -1,6 +1,6 @@
 """Orchestrates the two-pass node/edge build."""
 
-from .graph import Graph, is_yes
+from .graph import Graph
 from .generics import controlling_profile
 from .nodes import build_nodes
 from .edges import build_edges
@@ -32,23 +32,21 @@ def to_bloodhound(
     # Pass 1: nodes
     build_nodes(g, racf, apf_libs, parmlib_datasets, proclib_datasets)
 
-    # Build generic-profile control maps before Pass 2
+    # Build profile control maps before Pass 2.
+    # The controlling profile for a concrete dataset is the most-specific profile
+    # covering it, resolved against the COMPLETE profile set (every base profile
+    # plus every ACL profile) so that a specific profile shadows broader generics.
     ds_df = racf.datasets
     da_df = racf.datasetAccess
 
-    discrete_names = set(
-        ds_df.loc[~ds_df["DSBD_GENERIC"].apply(is_yes), "DSBD_NAME"]
-        .str.strip().str.upper()
-    )
-    generic_profiles = set(
-        da_df.loc[
-            da_df["DSACC_NAME"].str.contains(r"[*%]", regex=True, na=False),
-            "DSACC_NAME",
-        ].str.strip().str.upper()
+    all_profiles = set(
+        ds_df["DSBD_NAME"].str.strip().str.upper()
+    ) | set(
+        da_df["DSACC_NAME"].str.strip().str.upper()
     )
 
     def ctrl(ds_set):
-        return {ds: controlling_profile(ds, discrete_names, generic_profiles) for ds in ds_set}
+        return {ds: controlling_profile(ds, all_profiles) for ds in ds_set}
 
     control_maps = (ctrl(apf_libs), ctrl(parmlib_datasets), ctrl(proclib_datasets))
 

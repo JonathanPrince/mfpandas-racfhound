@@ -40,9 +40,17 @@ def specificity(profile_name: str) -> tuple:
     return (prefix_len, -breadth)
 
 
-def controlling_profile(target: str, discrete_names: set, generic_profiles: set) -> str | None:
-    """Return the most-specific generic profile that covers target, or None."""
-    if target in discrete_names:
-        return None
-    candidates = [p for p in generic_profiles if to_regex(p).match(target)]
+def controlling_profile(target: str, profiles: set) -> str | None:
+    """Return the most-specific profile that covers target, or None.
+
+    RACF resolves access to a dataset using the single most-specific matching
+    profile. A discrete (or fully-qualified) profile matches only its exact name;
+    a generic profile matches per its wildcard pattern. The most specific match
+    (longest literal prefix, fewest wildcards) controls — every broader profile is
+    shadowed. `profiles` must therefore be the complete profile set (discrete and
+    generic), not just wildcard profiles, or a more-specific profile that happens
+    to lack an explicit ACL entry would be missed and a broader generic would
+    wrongly win.
+    """
+    candidates = [p for p in profiles if to_regex(p).match(target)]
     return max(candidates, key=specificity) if candidates else None

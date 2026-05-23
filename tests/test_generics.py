@@ -73,16 +73,24 @@ class TestSpecificity:
 
 
 class TestControllingProfile:
-    def test_discrete_returns_none(self):
-        assert controlling_profile("APF.TESTLIB", {"APF.TESTLIB"}, {"APF.*", "APF.**"}) is None
+    def test_own_discrete_profile_controls(self):
+        # A dataset's own profile is its most-specific match and controls it.
+        assert controlling_profile("APF.TESTLIB", {"APF.TESTLIB", "APF.*", "APF.**"}) == "APF.TESTLIB"
 
     def test_most_specific_generic_wins(self):
-        result = controlling_profile("APF.OPEN", set(), {"APF.*", "APF.**"})
-        assert result == "APF.*"
+        assert controlling_profile("APF.OPEN", {"APF.*", "APF.**"}) == "APF.*"
 
     def test_no_match_returns_none(self):
-        assert controlling_profile("OTHER.LIB", set(), {"APF.*"}) is None
+        assert controlling_profile("OTHER.LIB", {"APF.*"}) is None
 
     def test_double_star_wins_when_only_candidate(self):
-        result = controlling_profile("APF.OPEN", set(), {"APF.**"})
-        assert result == "APF.**"
+        assert controlling_profile("APF.OPEN", {"APF.**"}) == "APF.**"
+
+    def test_specific_profile_shadows_broader_generic(self):
+        # Regression: SYS1.CSSLIB has its own profile, so SYS1.* must not control it
+        # even though SYS1.* matches — the more-specific profile wins.
+        assert controlling_profile("SYS1.CSSLIB", {"SYS1.*", "SYS1.CSSLIB"}) == "SYS1.CSSLIB"
+
+    def test_more_specific_generic_without_acl_shadows(self):
+        # A more-specific generic shadows the broader one regardless of ACL entries.
+        assert controlling_profile("SYS1.CSSLIB", {"SYS1.*", "SYS1.CSS*"}) == "SYS1.CSS*"
